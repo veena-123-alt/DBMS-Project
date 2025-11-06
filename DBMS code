@@ -1,0 +1,73 @@
+CREATE DATABASE FoodOrderingDB;
+USE FoodOrderingDB;
+CREATE TABLE Restaurant (
+    Restaurant_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Address VARCHAR(200) NOT NULL,
+    Contact_Number VARCHAR(15) UNIQUE
+);
+CREATE TABLE Menu_Item (
+    Item_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Restaurant_ID INT NOT NULL,
+    Item_Name VARCHAR(100) NOT NULL,
+    Price DECIMAL(8,2) CHECK (Price > 0),
+    Category VARCHAR(50),
+    FOREIGN KEY (Restaurant_ID) REFERENCES Restaurant(Restaurant_ID)
+);
+CREATE TABLE Customer (
+    Customer_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) UNIQUE,
+    Phone_Number VARCHAR(15) UNIQUE,
+    Address VARCHAR(200)
+);
+CREATE TABLE Orders (
+    Order_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Customer_ID INT,
+    Restaurant_ID INT,
+    Order_Date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Total_Amount DECIMAL(10,2) CHECK (Total_Amount >= 0),
+    FOREIGN KEY (Customer_ID) REFERENCES Customer(Customer_ID),
+    FOREIGN KEY (Restaurant_ID) REFERENCES Restaurant(Restaurant_ID)
+);
+CREATE TABLE Order_Details (
+    OrderDetail_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Order_ID INT,
+    Item_ID INT,
+    Quantity INT CHECK (Quantity > 0),
+    Subtotal DECIMAL(10,2) CHECK (Subtotal >= 0),
+    FOREIGN KEY (Order_ID) REFERENCES Orders(Order_ID),
+    FOREIGN KEY (Item_ID) REFERENCES Menu_Item(Item_ID)
+);
+INSERT INTO Restaurant (Name, Address, Contact_Number)
+VALUES ('Food Planet', 'Delhi', '9876543210'),
+       ('Tasty Treats', 'Mumbai', '9123456789');
+INSERT INTO Menu_Item (Restaurant_ID, Item_Name, Price, Category)
+VALUES (1, 'Pizza', 250.00, 'Main Course'),
+       (1, 'Burger', 120.00, 'Snack'),
+       (2, 'Pasta', 180.00, 'Main Course');
+INSERT INTO Customer (Name, Email, Phone_Number, Address)
+VALUES ('Amit Kumar', 'amit@example.com', '9998887776', 'Delhi'),
+       ('Neha Sharma', 'neha@example.com', '8887776665', 'Mumbai');
+INSERT INTO Orders (Customer_ID, Restaurant_ID, Total_Amount)
+VALUES (1, 1, 370.00);
+INSERT INTO Order_Details (Order_ID, Item_ID, Quantity, Subtotal)
+VALUES (1, 1, 1, 250.00),
+       (1, 2, 1, 120.00);
+SELECT * FROM Customer;
+SELECT Item_Name, Price
+FROM Menu_Item
+WHERE Restaurant_ID = 1;
+SELECT o.Order_ID, o.Order_Date, o.Total_Amount
+FROM Orders o
+JOIN Customer c ON o.Customer_ID = c.Customer_ID
+WHERE c.Name = 'Amit Kumar';
+SELECT r.Name, COUNT(o.Order_ID) AS Total_Orders
+FROM Restaurant r
+JOIN Orders o ON r.Restaurant_ID = o.Restaurant_ID
+GROUP BY r.Name;
+CREATE VIEW OrderSummary AS
+SELECT c.Name AS Customer, r.Name AS Restaurant, o.Total_Amount
+FROM Orders o
+JOIN Customer c ON o.Customer_ID = c.Customer_ID
+JOIN Restaurant r ON o.Restaurant_ID = r.Restaurant_ID;
